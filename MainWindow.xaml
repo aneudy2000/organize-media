@@ -1,0 +1,44 @@
+﻿<Window x:Class="organize_media.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:organize_media"
+        mc:Ignorable="d"
+        Title="Media Organizer" Height="250" Width="640">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="65"/>
+                <RowDefinition Height="65"/>
+                <RowDefinition Height="65"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" x:Name="sourceLabel" Content="Source Folder" HorizontalAlignment="Left" Margin="24,20,0,0"
+                   VerticalAlignment="Top"/>
+            <TextBox Grid.Row="0" x:Name="sourceTextBox" HorizontalAlignment="Left" Height="23" Margin="112,20,0,0"
+                     TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="400"/>
+            <Button Grid.Row="0" x:Name="sourcePicker" HorizontalAlignment="Left" Height="23" Margin="515,20,0,0"
+                    VerticalAlignment="Top" Width="100" Click="sourcePicker_Click" Content="Browse"/>
+            <Label Grid.Row="1" x:Name="targetLabel" Content="Target Folder" HorizontalAlignment="Left" Margin="24,20,0,0" VerticalAlignment="Top"/>
+            <TextBox Grid.Row="1" x:Name="targetTextBox" HorizontalAlignment="Left" Height="23" Margin="112,20,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="400"/>
+            <Button Grid.Row="1" x:Name="targetPicker" HorizontalAlignment="Left" Height="23" Margin="515,20,0,0"
+                    VerticalAlignment="Top" Width="100" Click="targetPicker_Click" Content="Browse"/>
+            <Grid Grid.Row="2" Margin="150,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Width="100" Height="30" HorizontalAlignment="Center" x:Name="cancelButton" Click="cancelButton_Click">
+                    Cancel
+                </Button>
+                <Button Grid.Column="1" Width="100" Height="30" HorizontalAlignment="Center" x:Name="organizeButton" Click="organizeButton_Click">
+                    Organize
+                </Button>
+            </Grid>
+            <TextBox HorizontalAlignment="Left" Height="23" Margin="240,56,0,-13" Grid.Row="2" TextWrapping="Wrap" VerticalAlignment="Top" Width="120"
+                     x:Name="resultBox"/>
+        </Grid>
+
+    </Grid>
+
+</Window>
