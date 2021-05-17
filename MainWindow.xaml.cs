@@ -27,8 +27,10 @@ namespace organize_media
 
         private static readonly string[] extensions = new string[] { ".png", ".jpeg", ".gif", ".jpg", ".psd", ".bmp", ".mp4", ".mov", ".avi" };
 
-        /** Indexes for Date Taken, Date Acquired, Date Modified, Date Created, Media Created. */
-        private static readonly int[] propIndexes = new int[] { 12, 136, 3, 4, 208 };
+        /** Indexes for Date Taken, Date Acquired, Media Created. */
+        private static readonly int[] propIndexes = new int[] { 12, 136, 208 };
+
+        Thread staThread;
 
         public MainWindow()
         {
@@ -55,31 +57,55 @@ namespace organize_media
             {
                 organizeButton.IsEnabled = false;
                 string sourceDirectory = sourceTextBox.Text;
-                Thread staThread = new Thread(r =>
+                string targetDirectory = targetTextBox.Text;
+
+                Action enableButton = () => organizeButton.IsEnabled = true;
+
+                staThread = new Thread(r =>
                 {
                     List<string> paths = getPaths(sourceDirectory);
+                    List<string> movedFiles = new List<string>();
+                    List<string> unmovedFiles = new List<string>();
+
                     foreach (string path in paths)
                     {
                         if (isCancelled)
                         {
-                            Console.WriteLine("Cancelled");
                             break;
                         }
+
                         List<DateTime> dates = getDates(path, sourceDirectory);
-                        DateTime dateTimeTaken = dates[0];
-                        Console.WriteLine(">>> " + dateTimeTaken);
+
+                        if (dates.Count() > 0)
+                        {
+                            DateTime dateTimeTaken = dates[0];
+                            string newPath = getNewPath(path, dateTimeTaken, targetDirectory);
+
+                            try
+                            {
+                                moveFile(path, newPath);
+                                Console.WriteLine("Moved " + path + " to " + newPath);
+                            }
+                            catch
+                            {
+                                unmovedFiles.Add(path);
+                            }
+                        }
+                        else
+                        {
+                            unmovedFiles.Add(path);
+                        }
                     }
+                    enableOrganizeButton();
                 });
                 staThread.SetApartmentState(ApartmentState.STA);
-                staThread.Start();
+                staThread.Start(organizeButton);
             }
-            organizeButton.IsEnabled = true;
-            isCancelled = false;
         }
 
         private bool formIsValid()
         {
-            return sourceTextBox.Text != "" && targetTextBox.Text == "";
+            return sourceTextBox.Text != "" && targetTextBox.Text != "" && sourceTextBox.Text != targetTextBox.Text;
         }
 
         private List<string> getPaths(string source)
@@ -113,9 +139,40 @@ namespace organize_media
 
         private List<DateTime> sort(List<DateTime> dates) => dates.OrderBy(d => d.Ticks).ToList();
 
+        private string getNewPath(string path, DateTime dt, string targetDirectory)
+        {
+            string month = "" + dt.Month;
+            if (month.Length == 1)
+            {
+                month = "0" + month;
+            }
+            return System.IO.Path.Combine(targetDirectory, dt.Year + "\\" + month + "\\" + System.IO.Path.GetFileName(path));
+        }
+
+        private void moveFile(string oldPath, string newPath)
+        {
+            if (File.Exists(newPath))
+            {
+                throw new IOException("File already exists");
+            }
+
+            File.Move(oldPath, newPath);
+        }
+
+        public void enableOrganizeButton()
+        {
+            this.Dispatcher.Invoke(() => organizeButton.IsEnabled = true);
+        }
+
         private void cancelButton_Click(object sender, RoutedEventArgs e)
         {
-            isCancelled = true;
+            if (isCancelled == false)
+            {
+                isCancelled = true;
+                staThread.Abort();
+                organizeButton.IsEnabled = true;
+                isCancelled = false;
+            }
         }
     }
 }
