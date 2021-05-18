@@ -56,10 +56,10 @@ namespace organize_media
             if (formIsValid())
             {
                 organizeButton.IsEnabled = false;
+                progress.Visibility = Visibility.Visible;
+
                 string sourceDirectory = sourceTextBox.Text;
                 string targetDirectory = targetTextBox.Text;
-
-                Action enableButton = () => organizeButton.IsEnabled = true;
 
                 staThread = new Thread(r =>
                 {
@@ -95,7 +95,9 @@ namespace organize_media
                         {
                             unmovedFiles.Add(path);
                         }
+                        updateProgress(paths.Count / 100);
                     }
+                    resetProgress();
                     enableOrganizeButton();
                 });
                 staThread.SetApartmentState(ApartmentState.STA);
@@ -105,7 +107,37 @@ namespace organize_media
 
         private bool formIsValid()
         {
-            return sourceTextBox.Text != "" && targetTextBox.Text != "" && sourceTextBox.Text != targetTextBox.Text;
+            if (sourceTextBox.Text != "" && targetTextBox.Text != "" && sourceTextBox.Text != targetTextBox.Text)
+            {
+                sourceError.Text = "";
+                targetError.Text = "";
+                return true;
+            }
+
+            if (sourceTextBox.Text == "")
+            {
+                sourceError.Text = "Source folder cannot be empty.";
+            }
+            else
+            {
+                sourceError.Text = "";
+            }
+
+            if (targetTextBox.Text == "")
+            {
+                targetError.Text = "Target folder cannot be empty.";
+            }
+            else
+            {
+                targetError.Text = "";
+            }
+
+            if (sourceTextBox.Text != "" && targetTextBox.Text != "" && sourceTextBox.Text == targetTextBox.Text)
+            {
+                targetError.Text = "Target folder cannot be the same as Source folder.";
+            }
+
+            return false;
         }
 
         private List<string> getPaths(string source)
@@ -164,12 +196,26 @@ namespace organize_media
             this.Dispatcher.Invoke(() => organizeButton.IsEnabled = true);
         }
 
+        public void updateProgress(float value)
+        {
+            this.Dispatcher.Invoke(() => progress.Value = progress.Value + value);
+        }
+
+        public void resetProgress()
+        {
+            this.Dispatcher.Invoke(() => progress.Value = 0);
+            this.Dispatcher.Invoke(() => progress.Visibility = Visibility.Hidden);
+        }
+
         private void cancelButton_Click(object sender, RoutedEventArgs e)
         {
             if (isCancelled == false)
             {
                 isCancelled = true;
-                staThread.Abort();
+                if (staThread != null)
+                {
+                    staThread.Abort();
+                }
                 organizeButton.IsEnabled = true;
                 isCancelled = false;
             }
