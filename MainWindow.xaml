@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:organize_media"
         mc:Ignorable="d"
-        Title="Media Organizer" Height="260" Width="650" MinHeight="250" MinWidth="650" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen">
+        Title="Media Organizer" Height="265" Width="650" MinHeight="250" MinWidth="650" ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen">
     <Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
             <GradientStop Color="White" Offset="0"/>
@@ -15,28 +15,30 @@
     <Grid>
         <Grid Height="250" Width="650">
             <Grid.RowDefinitions>
-                <RowDefinition Height="55"/>
-                <RowDefinition Height="55"/>
-                <RowDefinition Height="55"/>
-                <RowDefinition Height="55"/>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="60"/>
             </Grid.RowDefinitions>
-            <Label Grid.Row="0" x:Name="sourceLabel" Content="Source Folder" HorizontalAlignment="Left" Margin="24,20,0,0"
+            <Label Grid.Row="0" x:Name="sourceLabel" Content="Source Folder" HorizontalAlignment="Left" Margin="24,10,0,0"
                    VerticalAlignment="Top"/>
-            <TextBox Grid.Row="0" x:Name="sourceTextBox" HorizontalAlignment="Left" Height="23" Margin="112,20,0,0"
+            <TextBox Grid.Row="0" x:Name="sourceTextBox" HorizontalAlignment="Left" Height="23" Margin="112,10,0,0"
                      TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="400" />
-            <Button Grid.Row="0" x:Name="sourcePicker" HorizontalAlignment="Left" Height="23" Margin="515,20,0,0"
+            <Button Grid.Row="0" x:Name="sourcePicker" HorizontalAlignment="Left" Height="23" Margin="515,10,0,0"
                     VerticalAlignment="Top" Width="100" Click="sourcePicker_Click" Content="Browse"/>
-            <TextBlock Grid.Row="0" x:Name="sourceError" Height="23" Margin="112,40,0,0" Foreground="Red"></TextBlock>
-            <Label Grid.Row="1" x:Name="targetLabel" Content="Target Folder" HorizontalAlignment="Left" Margin="24,20,0,0" VerticalAlignment="Top"/>
-            <TextBox Grid.Row="1" x:Name="targetTextBox" HorizontalAlignment="Left" Height="23" Margin="112,20,0,0"
+            <CheckBox x:Name="includeSubfolders" Content="Include Subfolders" HorizontalAlignment="Left" Margin="110,45,0,0" VerticalAlignment="Top" Grid.RowSpan="2"/>
+            <CheckBox x:Name="deleteEmptyFolders" Content="Delete Empty Folders" HorizontalAlignment="Left" Margin="240,45,0,0" VerticalAlignment="Top" Grid.RowSpan="2"/>
+            <TextBlock Grid.Row="0" x:Name="sourceError" Height="20" Margin="112,32,40,8.667" Foreground="Red"/>
+            <Label Grid.Row="1" x:Name="targetLabel" Content="Target Folder" HorizontalAlignment="Left" Margin="24,18.333,0,0" VerticalAlignment="Top"/>
+            <TextBox Grid.Row="1" x:Name="targetTextBox" HorizontalAlignment="Left" Height="23" Margin="112,18.333,0,0"
                      TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="400" />
-            <Button Grid.Row="1" x:Name="targetPicker" HorizontalAlignment="Left" Height="23" Margin="515,20,0,0"
+            <Button Grid.Row="1" x:Name="targetPicker" HorizontalAlignment="Left" Height="23" Margin="515,18.333,0,0"
                     VerticalAlignment="Top" Width="100" Click="targetPicker_Click" Content="Browse" />
-            <TextBlock Grid.Row="1" x:Name="targetError" Height="23" Margin="112,40,0,0" Foreground="Red"></TextBlock>
-            <Grid Grid.Row="2" Margin="40,0">
-                <ProgressBar Minimum="0" Maximum="100" x:Name="progress" Height="15" Value="0" Visibility="Hidden"></ProgressBar>
+            <TextBlock Grid.Row="1" x:Name="targetError" Height="20" Margin="112,39.333,35,1.333" Foreground="Red"></TextBlock>
+            <Grid Grid.Row="1" Margin="40,53.333,40,7" Grid.RowSpan="2">
+                <ProgressBar Minimum="0" Maximum="100" x:Name="progress" Height="25" Value="0.0" VerticalAlignment="Center"></ProgressBar>
             </Grid>
-            <Grid Grid.Row="3" Margin="150,0,150,0">
+            <Grid Grid.Row="2" Margin="150,45.667,150,14.667" Grid.RowSpan="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>

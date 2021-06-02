@@ -41,6 +41,10 @@ namespace organize_media
         {
             var dialog = new FolderBrowserDialog();
             dialog.ShowDialog();
+            if (sourceTextBox.Text != "" && dialog.SelectedPath == "")
+            {
+                return;
+            }
             sourceTextBox.Text = dialog.SelectedPath;
         }
 
@@ -48,6 +52,10 @@ namespace organize_media
         {
             var dialog = new FolderBrowserDialog();
             dialog.ShowDialog();
+            if (targetTextBox.Text != "" && dialog.SelectedPath == "")
+            {
+                return;
+            }
             targetTextBox.Text = dialog.SelectedPath;
         }
 
@@ -56,16 +64,22 @@ namespace organize_media
             if (formIsValid())
             {
                 organizeButton.IsEnabled = false;
-                progress.Visibility = Visibility.Visible;
 
                 string sourceDirectory = sourceTextBox.Text;
                 string targetDirectory = targetTextBox.Text;
+                double progress = 0.0;
+                Boolean deleteEmptyDirectories = deleteEmptyFolders.IsEnabled;
 
                 staThread = new Thread(r =>
                 {
                     List<string> paths = getPaths(sourceDirectory);
                     List<string> movedFiles = new List<string>();
                     List<string> unmovedFiles = new List<string>();
+
+                    if (deleteEmptyDirectories)
+                    {
+                        removeEmptyFolders(targetDirectory);
+                    }
 
                     foreach (string path in paths)
                     {
@@ -74,17 +88,16 @@ namespace organize_media
                             break;
                         }
 
-                        List<DateTime> dates = getDates(path, sourceDirectory);
+                        List<DateTime> dates = getDates(path);
 
                         if (dates.Count() > 0)
                         {
                             DateTime dateTimeTaken = dates[0];
                             string newPath = getNewPath(path, dateTimeTaken, targetDirectory);
-
+                            string altPath = getNewPath(path, dateTimeTaken, sourceDirectory);
                             try
                             {
-                                moveFile(path, newPath);
-                                Console.WriteLine("Moved " + path + " to " + newPath);
+                                moveFile(path, newPath, altPath);
                             }
                             catch
                             {
@@ -95,11 +108,15 @@ namespace organize_media
                         {
                             unmovedFiles.Add(path);
                         }
-                        updateProgress(paths.Count / 100);
+
+                        progress = progress + (100.0 / paths.Count);
+                        setProgress(progress);
                     }
-                    resetProgress();
+
+                    setProgress(0);
                     enableOrganizeButton();
                 });
+
                 staThread.SetApartmentState(ApartmentState.STA);
                 staThread.Start(organizeButton);
             }
@@ -107,34 +124,30 @@ namespace organize_media
 
         private bool formIsValid()
         {
-            if (sourceTextBox.Text != "" && targetTextBox.Text != "" && sourceTextBox.Text != targetTextBox.Text)
+            if (sourceTextBox.Text != "" && targetTextBox.Text != ""
+                && System.IO.Directory.Exists(sourceTextBox.Text) && System.IO.Directory.Exists(targetTextBox.Text))
             {
                 sourceError.Text = "";
                 targetError.Text = "";
                 return true;
             }
 
-            if (sourceTextBox.Text == "")
+            if (sourceTextBox.Text == "" || !System.IO.Directory.Exists(sourceTextBox.Text))
             {
-                sourceError.Text = "Source folder cannot be empty.";
+                sourceError.Text = "Enter valid source folder";
             }
             else
             {
                 sourceError.Text = "";
             }
 
-            if (targetTextBox.Text == "")
+            if (targetTextBox.Text == "" || !System.IO.Directory.Exists(targetTextBox.Text))
             {
-                targetError.Text = "Target folder cannot be empty.";
+                targetError.Text = "Enter valid target folder.";
             }
             else
             {
                 targetError.Text = "";
-            }
-
-            if (sourceTextBox.Text != "" && targetTextBox.Text != "" && sourceTextBox.Text == targetTextBox.Text)
-            {
-                targetError.Text = "Target folder cannot be the same as Source folder.";
             }
 
             return false;
@@ -142,18 +155,42 @@ namespace organize_media
 
         private List<string> getPaths(string source)
         {
+            SearchOption searchOption = SearchOption.TopDirectoryOnly;
 
-            var paths = Directory.EnumerateFiles(source, "*.*", SearchOption.TopDirectoryOnly)
+            this.Dispatcher.Invoke(() =>
+            {
+                if (includeSubfolders.IsChecked == true)
+                {
+                    searchOption = SearchOption.AllDirectories;
+                }
+            });
+
+
+            var paths = Directory.EnumerateFiles(source, "*.*", searchOption)
                 .Where(file => extensions.Contains(System.IO.Path.GetExtension(file).ToLower())).ToList();
             return paths;
         }
 
-        private List<DateTime> getDates(string path, string source)
+
+        private void removeEmptyFolders(string targetDirectory)
+        {
+            foreach (string path in Directory.EnumerateDirectories(targetDirectory, "*", SearchOption.AllDirectories).ToList())
+            {
+                if (!Directory.EnumerateFiles(path).Any() && !Directory.EnumerateDirectories(path).Any())
+                {
+                    Directory.Delete(path);
+                    Console.WriteLine("Deleted " + path);
+                }
+            }
+
+        }
+
+        private List<DateTime> getDates(string path)
         {
             List<DateTime> dates = new List<DateTime>();
 
             Shell32.Shell shell = new Shell32.Shell();
-            Shell32.Folder folder = shell.NameSpace(source);
+            Shell32.Folder folder = shell.NameSpace(System.IO.Path.GetDirectoryName(path));
             Shell32.FolderItem item = folder.ParseName(System.IO.Path.GetFileName(path));
 
             for (int i = 0; i < propIndexes.Length; i++)
@@ -181,13 +218,15 @@ namespace organize_media
             return System.IO.Path.Combine(targetDirectory, dt.Year + "\\" + month + "\\" + System.IO.Path.GetFileName(path));
         }
 
-        private void moveFile(string oldPath, string newPath)
+        private void moveFile(string oldPath, string newPath, string altPath)
         {
             if (File.Exists(newPath))
             {
-                throw new IOException("File already exists");
+                Directory.CreateDirectory(System.IO.Path.GetDirectoryName(altPath));
+                File.Move(oldPath, altPath);
+                return;
             }
-
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(newPath));
             File.Move(oldPath, newPath);
         }
 
@@ -196,15 +235,9 @@ namespace organize_media
             this.Dispatcher.Invoke(() => organizeButton.IsEnabled = true);
         }
 
-        public void updateProgress(float value)
+        public void setProgress(double value)
         {
-            this.Dispatcher.Invoke(() => progress.Value = progress.Value + value);
-        }
-
-        public void resetProgress()
-        {
-            this.Dispatcher.Invoke(() => progress.Value = 0);
-            this.Dispatcher.Invoke(() => progress.Visibility = Visibility.Hidden);
+            this.Dispatcher.Invoke(() => progress.Value = value);
         }
 
         private void cancelButton_Click(object sender, RoutedEventArgs e)
